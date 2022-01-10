@@ -9,18 +9,20 @@ import org.apache.logging.log4j.Logger;
 public class ClientInitializer implements ClientModInitializer {
 	public static final Logger LOGGER = LogManager.getLogger("modid");
 
-	private static final Polyhedron testPolyhedron1 = Polyhedron.cube(8, -57, 7, 4);
-	private static final Polyhedron testPolyhedron2 = Polyhedron.cube(6, -56, 8, 4);
 
 	private static void renderPolyhedron(WorldRenderContext context) {
+		double sin = Math.sin((context.world().getTime() + context.tickDelta())/20.0);
+		double cos = Math.cos((context.world().getTime() + context.tickDelta())/35.0);
+		final Polyhedron testPolyhedron1 = Polyhedron.cube(8, -52+cos*3, 7, 4);
+		final Polyhedron testPolyhedron2 = Polyhedron.cube(6, -51, 8+sin*4, 4);
+		testPolyhedron2.setColor(125, 220, 175, 90);
+		Polyhedron.interact(testPolyhedron1, testPolyhedron2);
 		testPolyhedron1.render(context);
 		testPolyhedron2.render(context);
 	}
 
 	@Override
 	public void onInitializeClient() {
-		testPolyhedron2.setColor(125, 220, 175, 90);
-		Polyhedron.interact(testPolyhedron1, testPolyhedron2);
 		WorldRenderEvents.LAST.register(ClientInitializer::renderPolyhedron);
 	}
 }

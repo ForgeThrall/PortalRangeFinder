@@ -21,7 +21,7 @@ public class Polyhedron {
 	/**
 	 * Geeze. This sucked to write
 	 */
-	public static Polyhedron cube(int x, int y, int z, double r) {
+	public static Polyhedron cube(double x, double y, double z, double r) {
 		HalfEdge topNorth = new HalfEdge(new Vec3d(x+1+r, y+1+r, z+1+r), null, null);
 		HalfEdge topWest  = new HalfEdge(new Vec3d(x-r,   y+1+r, z+1+r), topNorth, null);
 		HalfEdge topSouth = new HalfEdge(new Vec3d(x-r,   y+1+r, z-r),   topWest,  null);
