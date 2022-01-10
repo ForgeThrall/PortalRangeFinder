@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "portal-range-finder",
+  "version": "${version}",
+
+  "name": "Portal Range Finder",
+  "description": "Visualize nether portal connection ranges, including overlaps with other nearby portals",
+  "authors": [
+    "ForgeThrall"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+
+  "license": "CC0-1.0",
+  "icon": "assets/portal-range-finder/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "net.forgethrall.PortalRangeFinder.ClientInitializer"
+    ]
+  },
+  "mixins": [
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "fabric": "*",
+    "minecraft": "1.18.x",
+    "java": ">=17"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
