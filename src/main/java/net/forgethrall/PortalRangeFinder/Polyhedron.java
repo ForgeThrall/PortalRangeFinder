@@ -6,7 +6,6 @@ import net.minecraft.client.render.*;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
@@ -21,81 +20,9 @@ public class Polyhedron {
 		this.faceAnchors = faceAnchors;
 	}
 
-	/**
-	 * Geeze. This sucked to write
-	 */
-	public static Polyhedron cube(double x, double y, double z, double r) {
-		HalfEdge topNorth = new HalfEdge(new Vec3d(x+1+r, y+1+r, z+1+r), null, null);
-		HalfEdge topWest  = new HalfEdge(new Vec3d(x-r,   y+1+r, z+1+r), topNorth, null);
-		HalfEdge topSouth = new HalfEdge(new Vec3d(x-r,   y+1+r, z-r),   topWest,  null);
-		HalfEdge topEast  = new HalfEdge(new Vec3d(x+1+r, y+1+r, z-r),   topSouth, null);
-		topNorth.next = topEast;
-
-		HalfEdge northTop  = new HalfEdge(new Vec3d(x-r,   y+1+r, z+1+r), null, null);
-		HalfEdge northEast = new HalfEdge(new Vec3d(x+1+r, y+1+r, z+1+r), northTop,  null);
-		HalfEdge northBot  = new HalfEdge(new Vec3d(x+1+r, y-r,   z+1+r), northEast, null);
-		HalfEdge northWest = new HalfEdge(new Vec3d(x-r,   y-r,   z+1+r), northBot,  null);
-		northTop.next = northWest;
-
-		HalfEdge westTop   = new HalfEdge(new Vec3d(x-r, y+1+r, z-r), null, null);
-		HalfEdge westNorth = new HalfEdge(new Vec3d(x-r, y+1+r, z+1+r), westTop,   null);
-		HalfEdge westBot   = new HalfEdge(new Vec3d(x-r, y-r,   z+1+r), westNorth, null);
-		HalfEdge westSouth = new HalfEdge(new Vec3d(x-r, y-r,   z-r),   westBot,   null);
-		westTop.next = westSouth;
-
-		HalfEdge southTop  = new HalfEdge(new Vec3d(x+1+r, y+1+r, z-r), null, null);
-		HalfEdge southWest = new HalfEdge(new Vec3d(x-r,   y+1+r, z-r), southTop, null);
-		HalfEdge southBot  = new HalfEdge(new Vec3d(x-r,   y-r,   z-r), southWest,null);
-		HalfEdge southEast = new HalfEdge(new Vec3d(x+1+r, y-r,   z-r), southBot, null);
-		southTop.next = southEast;
-
-		HalfEdge eastTop   = new HalfEdge(new Vec3d(x+1+r, y+1+r, z+1+r), null, null);
-		HalfEdge eastSouth = new HalfEdge(new Vec3d(x+1+r, y+1+r, z-r),   eastTop,   null);
-		HalfEdge eastBot   = new HalfEdge(new Vec3d(x+1+r, y-r,   z-r),   eastSouth, null);
-		HalfEdge eastNorth = new HalfEdge(new Vec3d(x+1+r, y-r,   z+1+r), eastBot,   null);
-		eastTop.next = eastNorth;
-
-		HalfEdge botNorth  = new HalfEdge(new Vec3d(x-r,   y-r, z+1+r), null, null);
-		HalfEdge botEast   = new HalfEdge(new Vec3d(x+1+r, y-r, z+1+r), botNorth, null);
-		HalfEdge botSouth  = new HalfEdge(new Vec3d(x+1+r, y-r, z-r),   botEast,  null);
-		HalfEdge botWest   = new HalfEdge(new Vec3d(x-r,   y-r, z-r),   botSouth, null);
-		botNorth.next = botWest;
-
-		topNorth.twin = northTop;
-		topWest.twin  = westTop;
-		topSouth.twin = southTop;
-		topEast.twin  = eastTop;
-
-		northTop.twin  = topNorth;
-		northEast.twin = eastNorth;
-		northBot.twin  = botNorth;
-		northWest.twin = westNorth;
-
-		westTop.twin   = topWest;
-		westNorth.twin = northWest;
-		westBot.twin   = botWest;
-		westSouth.twin = southWest;
-
-		southTop.twin  = topSouth;
-		southWest.twin = westSouth;
-		southBot.twin  = botSouth;
-		southEast.twin = eastSouth;
-
-		eastTop.twin   = topEast;
-		eastSouth.twin = southEast;
-		eastBot.twin   = botEast;
-		eastNorth.twin = northEast;
-
-		botNorth.twin = northBot;
-		botEast.twin  = eastBot;
-		botSouth.twin = southBot;
-		botWest.twin  = westBot;
-
-		Polyhedron result = new Polyhedron(generateFaceAnchors(topNorth));
-		result.origin = new Vec3d(x+.5, y+.5, z+.5);
-		return result;
+	public static Polyhedron cube(Vec3d origin, double r) {
+		return Polyhedron.rectangularCuboid(origin, new Vec3d(r, r, r));
 	}
-
 
 	public static Polyhedron rectangularCuboid(Vec3d origin, Vec3d size) {
 		double x0 = origin.x;
