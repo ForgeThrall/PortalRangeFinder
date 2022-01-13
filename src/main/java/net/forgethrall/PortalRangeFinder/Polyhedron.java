@@ -6,12 +6,15 @@ import net.minecraft.client.render.*;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Objects;
 
 public class Polyhedron {
 	HashSet<HalfEdge> faceAnchors;
 	private Vec3d origin;
+	private Vec3d size;
 	int red = 230, green = 200, blue = 200, alpha = 90;
 
 	private Polyhedron(HashSet<HalfEdge> faceAnchors) {
@@ -93,7 +96,90 @@ public class Polyhedron {
 		return result;
 	}
 
+
+	public static Polyhedron rectangularCuboid(Vec3d origin, Vec3d size) {
+		double x0 = origin.x;
+		double y0 = origin.y;
+		double z0 = origin.z;
+		double x1 = x0 + size.x;
+		double y1 = y0 + size.y;
+		double z1 = z0 + size.z;
+
+		HalfEdge topNorth = new HalfEdge(new Vec3d(x1, y1, z1), null, null);
+		HalfEdge topWest  = new HalfEdge(new Vec3d(x0, y1, z1), topNorth, null);
+		HalfEdge topSouth = new HalfEdge(new Vec3d(x0, y1, z0), topWest,  null);
+		HalfEdge topEast  = new HalfEdge(new Vec3d(x1, y1, z0), topSouth, null);
+		topNorth.next = topEast;
+
+		HalfEdge northTop  = new HalfEdge(new Vec3d(x0, y1, z1), null, null);
+		HalfEdge northEast = new HalfEdge(new Vec3d(x1, y1, z1), northTop,  null);
+		HalfEdge northBot  = new HalfEdge(new Vec3d(x1, y0, z1), northEast, null);
+		HalfEdge northWest = new HalfEdge(new Vec3d(x0, y0, z1), northBot,  null);
+		northTop.next = northWest;
+
+		HalfEdge westTop   = new HalfEdge(new Vec3d(x0, y1, z0), null, null);
+		HalfEdge westNorth = new HalfEdge(new Vec3d(x0, y1, z1), westTop,   null);
+		HalfEdge westBot   = new HalfEdge(new Vec3d(x0, y0, z1), westNorth, null);
+		HalfEdge westSouth = new HalfEdge(new Vec3d(x0, y0, z0), westBot,   null);
+		westTop.next = westSouth;
+
+		HalfEdge southTop  = new HalfEdge(new Vec3d(x1, y1, z0), null, null);
+		HalfEdge southWest = new HalfEdge(new Vec3d(x0, y1, z0), southTop, null);
+		HalfEdge southBot  = new HalfEdge(new Vec3d(x0, y0, z0), southWest,null);
+		HalfEdge southEast = new HalfEdge(new Vec3d(x1, y0, z0), southBot, null);
+		southTop.next = southEast;
+
+		HalfEdge eastTop   = new HalfEdge(new Vec3d(x1, y1, z1), null, null);
+		HalfEdge eastSouth = new HalfEdge(new Vec3d(x1, y1, z0), eastTop,   null);
+		HalfEdge eastBot   = new HalfEdge(new Vec3d(x1, y0, z0), eastSouth, null);
+		HalfEdge eastNorth = new HalfEdge(new Vec3d(x1, y0, z1), eastBot,   null);
+		eastTop.next = eastNorth;
+
+		HalfEdge botNorth  = new HalfEdge(new Vec3d(x0, y0, z1), null, null);
+		HalfEdge botEast   = new HalfEdge(new Vec3d(x1, y0, z1), botNorth, null);
+		HalfEdge botSouth  = new HalfEdge(new Vec3d(x1, y0, z0), botEast,  null);
+		HalfEdge botWest   = new HalfEdge(new Vec3d(x0, y0, z0), botSouth, null);
+		botNorth.next = botWest;
+
+		topNorth.twin = northTop;
+		topWest.twin  = westTop;
+		topSouth.twin = southTop;
+		topEast.twin  = eastTop;
+
+		northTop.twin  = topNorth;
+		northEast.twin = eastNorth;
+		northBot.twin  = botNorth;
+		northWest.twin = westNorth;
+
+		westTop.twin   = topWest;
+		westNorth.twin = northWest;
+		westBot.twin   = botWest;
+		westSouth.twin = southWest;
+
+		southTop.twin  = topSouth;
+		southWest.twin = westSouth;
+		southBot.twin  = botSouth;
+		southEast.twin = eastSouth;
+
+		eastTop.twin   = topEast;
+		eastSouth.twin = southEast;
+		eastBot.twin   = botEast;
+		eastNorth.twin = northEast;
+
+		botNorth.twin = northBot;
+		botEast.twin  = eastBot;
+		botSouth.twin = southBot;
+		botWest.twin  = westBot;
+
+
+		Polyhedron result = new Polyhedron(generateFaceAnchors(topNorth));
+		result.origin = origin;
+		result.size = size;
+		return result;
+	}
+
 	// todo fix this method name. "interfere"?
+	// todo make this true to the size of the portals. currently just a point
 	public static void interact(Polyhedron p1, Polyhedron p2) {
 		Plane slicer = new Plane(p1.origin.subtract(p2.origin), p1.origin.add(p2.origin).multiply(.5));
 		p1.slice(slicer.inverse());
@@ -251,6 +337,20 @@ public class Polyhedron {
 		RenderSystem.disableBlend();
 		RenderSystem.enableTexture();
 
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(origin, size);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Polyhedron p = (Polyhedron)o;
+		return p.origin.equals(this.origin) && p.size.equals(this.size);
 	}
 
 	protected static class HalfEdge {
