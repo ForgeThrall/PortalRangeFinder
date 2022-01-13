@@ -23,6 +23,7 @@
     ]
   },
   "mixins": [
+    "portal-range-finder.mixins.json"
   ],
 
   "depends": {
