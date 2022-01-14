@@ -12,12 +12,12 @@ import java.util.Set;
 public class ClientInitializer implements ClientModInitializer {
 	public static final Logger LOGGER = LogManager.getLogger("modid");
 
-	public static Set<Polyhedron> polyhedra = new HashSet<>();
+	public static Set<PortalVisualizer> portals = new HashSet<>();
 
 	private static void renderPolyhedrons(WorldRenderContext context) {
-		for (Polyhedron polyhedron : polyhedra) {
-			if(polyhedron == null) continue; // maybe not needed
-			polyhedron.render(context);
+		for (PortalVisualizer portal : portals) {
+			if(portal == null) continue; // maybe not needed
+			portal.render(context);
 		}
 	}
 
