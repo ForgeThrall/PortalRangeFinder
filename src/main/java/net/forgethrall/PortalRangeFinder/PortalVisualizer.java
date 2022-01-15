@@ -65,6 +65,7 @@ public class PortalVisualizer {
 	}
 
 	public void render(WorldRenderContext context) {
+		if(context.world().getRegistryKey() == World.END) return;
 		if(context.world().getRegistryKey() == portalDimension) {
 			portalMesh.render(context);
 		} else {
