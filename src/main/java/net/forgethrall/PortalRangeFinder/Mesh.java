@@ -42,9 +42,9 @@ public class Mesh {
 			Vec3d v0 = cam.relativize(tri[0]);
 			Vec3d v1 = cam.relativize(tri[1]);
 			Vec3d v2 = cam.relativize(tri[2]);
-			bufferBuilder.vertex(v0.x, v0.y, v0.z).color(red, green, blue, 40).next();
-			bufferBuilder.vertex(v1.x, v1.y, v1.z).color(red, green, blue, 40).next();
-			bufferBuilder.vertex(v2.x, v2.y, v2.z).color(red, green, blue, 40).next();
+			bufferBuilder.vertex(v0.x, v0.y, v0.z).color(red, green, blue, alpha).next();
+			bufferBuilder.vertex(v1.x, v1.y, v1.z).color(red, green, blue, alpha).next();
+			bufferBuilder.vertex(v2.x, v2.y, v2.z).color(red, green, blue, alpha).next();
 		}
 		tessellator.draw();
 
