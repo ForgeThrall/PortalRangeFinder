@@ -73,7 +73,7 @@ public class PortalVisualizer {
 	}
 
 	private void generateFrameMesh() {
-		HashSet<Vec3d[]> tris = new HashSet<>();
+		HashSet<Vec3d[]> quads = new HashSet<>();
 		HashSet<Vec3d[]> lines = new HashSet<>();
 
 		Vec3d v000 = new Vec3d(portalOrigin.getX(), portalOrigin.getY(), portalOrigin.getZ());
@@ -85,19 +85,13 @@ public class PortalVisualizer {
 		Vec3d v011 = new Vec3d(portalOrigin.getX(), portalOrigin.getY() + portalSize.getY(), portalOrigin.getZ() + portalSize.getZ());
 		Vec3d v111 = new Vec3d(portalOrigin.getX() + portalSize.getX(), portalOrigin.getY() + portalSize.getY(), portalOrigin.getZ() + portalSize.getZ());
 
-		tris.add(new Vec3d[]{v000, v100, v101});
-		tris.add(new Vec3d[]{v000, v101, v001});
-		tris.add(new Vec3d[]{v000, v001, v011});
-		tris.add(new Vec3d[]{v000, v011, v010});
-		tris.add(new Vec3d[]{v000, v010, v110});
-		tris.add(new Vec3d[]{v000, v110, v100});
+		quads.add(new Vec3d[]{v000, v100, v101, v001});
+		quads.add(new Vec3d[]{v000, v001, v011, v010});
+		quads.add(new Vec3d[]{v000, v010, v110, v100});
 
-		tris.add(new Vec3d[]{v111, v110, v010});
-		tris.add(new Vec3d[]{v111, v010, v011});
-		tris.add(new Vec3d[]{v111, v011, v001});
-		tris.add(new Vec3d[]{v111, v001, v101});
-		tris.add(new Vec3d[]{v111, v101, v100});
-		tris.add(new Vec3d[]{v111, v100, v110});
+		quads.add(new Vec3d[]{v111, v110, v010, v011});
+		quads.add(new Vec3d[]{v111, v011, v001, v101});
+		quads.add(new Vec3d[]{v111, v101, v100, v110});
 
 		lines.add(new Vec3d[]{v000, v100});
 		lines.add(new Vec3d[]{v100, v101});
@@ -114,7 +108,7 @@ public class PortalVisualizer {
 		lines.add(new Vec3d[]{v101, v111});
 		lines.add(new Vec3d[]{v100, v110});
 
-		this.portalMesh = new Mesh(tris, lines);
+		this.portalMesh = new Mesh(quads, lines);
 	}
 
 	private void generateRangeMesh() {
@@ -122,7 +116,7 @@ public class PortalVisualizer {
 	}
 
 	private void generateRangeMeshOverworld() {
-		HashSet<Vec3d[]> tris = new HashSet<>();
+		HashSet<Vec3d[]> quads = new HashSet<>();
 		HashSet<Vec3d[]> lines = new HashSet<>();
 
 		int x0 = MathHelper.floor(portalOrigin.getX()*8-128);
@@ -143,33 +137,27 @@ public class PortalVisualizer {
 					Vec3d v111 = new Vec3d(x0+x*8+8, y0+y+1, z0+z*8+8);
 
 					if(x+1 >= voxels.length || !voxels[x+1][y][z]){
-						tris.add(new Vec3d[]{v100, v110, v111});
-						tris.add(new Vec3d[]{v100, v111, v101});
+						quads.add(new Vec3d[]{v100, v110, v111, v101});
 					}
 					if(x-1 < 0 || !voxels[x-1][y][z]) {
-						tris.add(new Vec3d[]{v000, v001, v011});
-						tris.add(new Vec3d[]{v000, v011, v010});
+						quads.add(new Vec3d[]{v000, v001, v011, v010});
 					}
 					if(y+1 >= voxels[0].length || !voxels[x][y+1][z]) {
-						tris.add(new Vec3d[]{v010, v011, v111});
-						tris.add(new Vec3d[]{v010, v111, v110});
+						quads.add(new Vec3d[]{v010, v011, v111, v110});
 					}
 					if(y-1 < 0 || !voxels[x][y-1][z]) {
-						tris.add(new Vec3d[]{v000, v100, v101});
-						tris.add(new Vec3d[]{v000, v101, v001});
+						quads.add(new Vec3d[]{v000, v100, v101, v001});
 					}
 					if(z+1 >= voxels[0][0].length || !voxels[x][y][z+1]) {
-						tris.add(new Vec3d[]{v001, v101, v111});
-						tris.add(new Vec3d[]{v001, v111, v011});
+						quads.add(new Vec3d[]{v001, v101, v111, v011});
 					}
 					if(z-1 < 0 || !voxels[x][y][z-1]) {
-						tris.add(new Vec3d[]{v000, v010, v110});
-						tris.add(new Vec3d[]{v000, v110, v100});
+						quads.add(new Vec3d[]{v000, v010, v110, v100});
 					}
 				}
 			}
 		}
 
-		rangeMesh = new Mesh(tris, lines);
+		rangeMesh = new Mesh(quads, lines);
 	}
 }

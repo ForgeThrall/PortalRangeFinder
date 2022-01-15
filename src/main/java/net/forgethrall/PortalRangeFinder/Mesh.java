@@ -9,17 +9,17 @@ import net.minecraft.util.math.Vec3f;
 import java.util.HashSet;
 
 public class Mesh {
-	Vec3d[][] tris;
+	Vec3d[][] quads;
 	Vec3d[][] lines;
 	int red = 230, green = 200, blue = 200, alpha = 90;
 
-	public Mesh(Vec3d[][] tris, Vec3d[][] lines){
-		this.tris = tris;
+	public Mesh(Vec3d[][] quads, Vec3d[][] lines){
+		this.quads = quads;
 		this.lines = lines;
 	}
 
-	public Mesh(HashSet<Vec3d[]> tris, HashSet<Vec3d[]> lines){
-		this(tris.toArray(Vec3d[][]::new), lines.toArray(Vec3d[][]::new));
+	public Mesh(HashSet<Vec3d[]> quads, HashSet<Vec3d[]> lines){
+		this(quads.toArray(Vec3d[][]::new), lines.toArray(Vec3d[][]::new));
 	}
 
 	public void render(WorldRenderContext context) {
@@ -37,14 +37,16 @@ public class Mesh {
 
 		//todo change this to a triangle_fan or quads?
 		RenderSystem.setShader(GameRenderer::getPositionColorShader);
-		bufferBuilder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
-		for(Vec3d[] tri : tris) {
-			Vec3d v0 = cam.relativize(tri[0]);
-			Vec3d v1 = cam.relativize(tri[1]);
-			Vec3d v2 = cam.relativize(tri[2]);
+		bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+		for(Vec3d[] quad : quads) {
+			Vec3d v0 = cam.relativize(quad[0]);
+			Vec3d v1 = cam.relativize(quad[1]);
+			Vec3d v2 = cam.relativize(quad[2]);
+			Vec3d v3 = cam.relativize(quad[3]);
 			bufferBuilder.vertex(v0.x, v0.y, v0.z).color(red, green, blue, alpha).next();
 			bufferBuilder.vertex(v1.x, v1.y, v1.z).color(red, green, blue, alpha).next();
 			bufferBuilder.vertex(v2.x, v2.y, v2.z).color(red, green, blue, alpha).next();
+			bufferBuilder.vertex(v3.x, v3.y, v3.z).color(red, green, blue, alpha).next();
 		}
 		tessellator.draw();
 
