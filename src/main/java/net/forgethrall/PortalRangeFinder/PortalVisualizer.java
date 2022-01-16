@@ -129,37 +129,73 @@ public class PortalVisualizer {
 			z0 = portalOrigin.getZ()*scale-128;
 		}
 
-		for(int x = 0; x < voxels.length; x++) {
-			for(int y = 0; y < voxels[0].length; y++) {
-				for(int z = 0; z < voxels[0][0].length; z++) {
-					if(!voxels[x][y][z]) continue;
+		int[] dims = new int[]{voxels.length, voxels[0].length, voxels[0][0].length};
+		// Sweep over the three axes
+		// d is the principle axis, u and v are the scanning axes
+		for(int d = 0; d < 3; d++) {
+			int u = (d+1)%3;
+			int v = (d+2)%3;
 
-					Vec3d v000 = new Vec3d(x0+x*scale,     y0+y,   z0+z*scale);
-					Vec3d v100 = new Vec3d(x0+(x+1)*scale, y0+y,   z0+z*scale);
-					Vec3d v001 = new Vec3d(x0+x*scale,     y0+y,   z0+(z+1)*scale);
-					Vec3d v101 = new Vec3d(x0+(x+1)*scale, y0+y,   z0+(z+1)*scale);
-					Vec3d v010 = new Vec3d(x0+x*scale,     y0+y+1, z0+z*scale);
-					Vec3d v110 = new Vec3d(x0+(x+1)*scale, y0+y+1, z0+z*scale);
-					Vec3d v011 = new Vec3d(x0+x*scale,     y0+y+1, z0+(z+1)*scale);
-					Vec3d v111 = new Vec3d(x0+(x+1)*scale, y0+y+1, z0+(z+1)*scale);
+			int[] xyz = new int[]{0, 0, 0};
+			int[] step = new int[]{0, 0, 0};
+			step[d] = 1;
 
-					if(x+1 >= voxels.length || !voxels[x+1][y][z]){
-						quads.add(new Vec3d[]{v100, v110, v111, v101});
+			boolean[][] mask = new boolean[dims[u]][dims[v]];
+
+			for(xyz[d] = -1; xyz[d] < dims[d]; ) {
+				// Compute mask
+				for(xyz[u] = 0; xyz[u] < dims[u]; xyz[u]++) {
+					for(xyz[v] = 0; xyz[v] < dims[v]; xyz[v]++) {
+						// starts before the first plane, comparing ahead
+						mask[xyz[u]][xyz[v]] =
+								(xyz[d] >= 0 && voxels[xyz[0]][xyz[1]][xyz[2]]) !=
+								(xyz[d]+1 < dims[d] && voxels[xyz[0] + step[0]][xyz[1] + step[1]][xyz[2] + step[2]]);
 					}
-					if(x-1 < 0 || !voxels[x-1][y][z]) {
-						quads.add(new Vec3d[]{v000, v001, v011, v010});
-					}
-					if(y+1 >= voxels[0].length || !voxels[x][y+1][z]) {
-						quads.add(new Vec3d[]{v010, v011, v111, v110});
-					}
-					if(y-1 < 0 || !voxels[x][y-1][z]) {
-						quads.add(new Vec3d[]{v000, v100, v101, v001});
-					}
-					if(z+1 >= voxels[0][0].length || !voxels[x][y][z+1]) {
-						quads.add(new Vec3d[]{v001, v101, v111, v011});
-					}
-					if(z-1 < 0 || !voxels[x][y][z-1]) {
-						quads.add(new Vec3d[]{v000, v010, v110, v100});
+				}
+				if(d == 0 && xyz[d] == -1) {
+					ClientInitializer.LOGGER.info(Arrays.deepToString(voxels[0]));
+					ClientInitializer.LOGGER.info(Arrays.deepToString(mask));
+				}
+				xyz[d]++;
+
+				// generate mesh from mask
+				for(int i = 0; i < dims[u]; i++) {
+					for(int j = 0; j < dims[v]; j++) {
+						if(mask[i][j]) {
+							int w = 1;
+							while(i+w < dims[u] && mask[i+w][j]) w++;
+
+							int h;
+							calc_height:
+							for(h = 1; j+h < dims[v]; h++){
+								for(int k = 0; k < w; k++) {
+									if(!mask[i+k][j+h]) break calc_height;
+								}
+							}
+
+							xyz[u] = i;
+							xyz[v] = j;
+
+							int[] du = new int[]{0, 0, 0};
+							int[] dv = new int[]{0, 0, 0};
+							du[u] = w;
+							dv[v] = h;
+
+							quads.add(new Vec3d[]{
+									new Vec3d(x0+(xyz[0]            )*scale, y0+xyz[1],             z0+(xyz[2]            )*scale),
+									new Vec3d(x0+(xyz[0]+du[0]      )*scale, y0+xyz[1]+du[1],       z0+(xyz[2]+du[2]      )*scale),
+									new Vec3d(x0+(xyz[0]+du[0]+dv[0])*scale, y0+xyz[1]+du[1]+dv[1], z0+(xyz[2]+du[2]+dv[2])*scale),
+									new Vec3d(x0+(xyz[0]      +dv[0])*scale, y0+xyz[1]      +dv[1], z0+(xyz[2]      +dv[2])*scale)
+							});
+
+							// clear the portion of the mask that's been covered
+							for(int l = 0; l < w; l++) {
+								for(int k = 0; k < h; k++) {
+									mask[i+l][j+k] = false;
+								}
+							}
+							i += w-1;
+						}
 					}
 				}
 			}
