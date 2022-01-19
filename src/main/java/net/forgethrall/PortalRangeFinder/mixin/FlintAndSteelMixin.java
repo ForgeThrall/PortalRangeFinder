@@ -4,6 +4,7 @@ import net.forgethrall.PortalRangeFinder.ClientInitializer;
 import net.forgethrall.PortalRangeFinder.PortalVisualizer;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.NetherPortalBlock;
+import net.minecraft.block.TintedGlassBlock;
 import net.minecraft.item.FlintAndSteelItem;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.util.ActionResult;
@@ -22,7 +23,11 @@ public class FlintAndSteelMixin {
 		BlockPos blockPos = context.getBlockPos();
 		BlockState blockState = world.getBlockState(blockPos);
 		if(world.isClient() && blockState.getBlock() instanceof NetherPortalBlock) {
-			ClientInitializer.portals.add(new PortalVisualizer(context.getWorld(), blockPos));
+			ClientInitializer.addPortal(new PortalVisualizer(context.getWorld(), blockPos));
+			cir.setReturnValue(ActionResult.SUCCESS);
+		}
+		if(world.isClient() && blockState.getBlock() instanceof TintedGlassBlock) {
+			ClientInitializer.portals.clear();
 			cir.setReturnValue(ActionResult.SUCCESS);
 		}
 	}

@@ -13,6 +13,15 @@ public class Mesh {
 	Vec3d[][] lines;
 	int red = 230, green = 200, blue = 200, alpha = 90;
 
+	public void setColor(int r, int g, int b, int a) {
+		red = r;
+		green = g;
+		blue = b;
+		alpha = a;
+	}
+
+	public Mesh() {}
+
 	public Mesh(Vec3d[][] quads, Vec3d[][] lines){
 		this.quads = quads;
 		this.lines = lines;
@@ -20,6 +29,11 @@ public class Mesh {
 
 	public Mesh(HashSet<Vec3d[]> quads, HashSet<Vec3d[]> lines){
 		this(quads.toArray(Vec3d[][]::new), lines.toArray(Vec3d[][]::new));
+	}
+
+	public void setMesh(HashSet<Vec3d[]> quads, HashSet<Vec3d[]> lines){
+		this.quads = quads.toArray(Vec3d[][]::new);
+		this.lines = lines.toArray(Vec3d[][]::new);
 	}
 
 	public void render(WorldRenderContext context) {

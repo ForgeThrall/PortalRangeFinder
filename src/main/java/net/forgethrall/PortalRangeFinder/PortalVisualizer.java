@@ -60,6 +60,8 @@ public class PortalVisualizer {
 			}
 		}
 
+		this.portalMesh = new Mesh();
+		this.rangeMesh = new Mesh();
 		generateFrameMesh();
 		generateRangeMesh();
 	}
@@ -109,7 +111,7 @@ public class PortalVisualizer {
 		lines.add(new Vec3d[]{v101, v111});
 		lines.add(new Vec3d[]{v100, v110});
 
-		this.portalMesh = new Mesh(quads, lines);
+		this.portalMesh.setMesh(quads, lines);
 	}
 
 	private void generateRangeMesh() {
@@ -159,8 +161,8 @@ public class PortalVisualizer {
 				xyz[d]++;
 
 				// generate mesh from mask
-				for(int i = 0; i < dims[u]; i++) {
-					for(int j = 0; j < dims[v]; j++) {
+				for(int j = 0; j < dims[v]; j++) {
+					for(int i = 0; i < dims[u]; i++) {
 						if(mask[i][j]) {
 							int w = 1;
 							while(i+w < dims[u] && mask[i+w][j]) w++;
@@ -201,6 +203,63 @@ public class PortalVisualizer {
 			}
 		}
 
-		rangeMesh = new Mesh(quads, lines);
+		this.rangeMesh.setMesh(quads, lines);
+	}
+
+	public void interfereWith(PortalVisualizer other) {
+		if(this.portalDimension != other.portalDimension) return;
+
+		int dx = this.portalOrigin.getX() - other.portalOrigin.getX();
+		// todo: de-duplicate this from generateRangeMesh?
+		final int y0, thisX0, thisZ0, otherX0, otherZ0;
+		if(this.portalDimension == World.OVERWORLD) {
+			y0 = 0;
+			thisX0 = this.portalOrigin.getX() - 128;
+			thisZ0 = this.portalOrigin.getZ() - 128;
+			otherX0 = other.portalOrigin.getX() - 128;
+			otherZ0 = other.portalOrigin.getZ() - 128;
+		} else {
+			y0 = -64;
+			thisX0 = this.portalOrigin.getX()-16;
+			thisZ0 = this.portalOrigin.getZ()-16;
+			otherX0 = other.portalOrigin.getX()-16;
+			otherZ0 = other.portalOrigin.getZ()-16;
+		}
+
+		Vec3i thisOrigin = new Vec3i(this.portalOrigin.getX(), this.portalOrigin.getY(), this.portalOrigin.getZ());
+		Vec3i otherOrigin = new Vec3i(other.portalOrigin.getX(), other.portalOrigin.getY(), other.portalOrigin.getZ());
+
+		int startX, startY, thisXOff, thisZOff, otherXOff, otherZOff;
+		if(thisX0 > otherX0) {
+			thisXOff = 0;
+			otherXOff = thisX0 - otherX0;
+		} else {
+			thisXOff = otherX0 - thisX0;
+			otherXOff = 0;
+		}
+		if(thisZ0 > otherZ0) {
+			thisZOff = 0;
+			otherZOff = thisZ0 - otherZ0;
+		} else {
+			thisZOff = otherZ0 - thisZ0;
+			otherZOff = 0;
+		}
+
+		for(int x = 0; x + thisXOff < this.voxels.length && x + otherXOff < other.voxels.length; x++) {
+			for(int y = 0; y < this.voxels[0].length && y < other.voxels[0].length; y++) {
+				for(int z = 0; z + thisZOff < this.voxels[0][0].length && z + otherZOff < other.voxels[0][0].length; z++) {
+					if(!other.voxels[x][y][z]) continue;
+					Vec3i pos = new Vec3i(x+thisXOff+otherXOff, y+y0, z+thisZOff+otherZOff);
+					if(pos.getSquaredDistance(thisOrigin) > pos.getSquaredDistance(otherOrigin)) {
+						this.voxels[x+thisXOff][y][z+thisZOff] = false;
+					} else {
+						other.voxels[x+otherXOff][y][z+otherZOff] = false;
+					}
+				}
+			}
+		}
+
+		this.generateRangeMesh();
+		other.generateRangeMesh();
 	}
 }
