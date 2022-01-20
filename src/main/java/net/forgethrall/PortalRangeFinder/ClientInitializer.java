@@ -13,7 +13,8 @@ public class ClientInitializer implements ClientModInitializer {
 	public static final Logger LOGGER = LogManager.getLogger("modid");
 
 	public static Set<PortalVisualizer> portals = new HashSet<>();
-	private static final int[][] colors = new int[][]{{230, 200, 200, 90}, {30, 230, 120, 90}, {0xfa, 0x00f, 0x9, 90}};
+	public static PortalVisualizer latestPortal;
+	private static final int[][] colors = new int[][]{{230, 200, 200, 50}, {30, 230, 120, 50}, {0xfa, 0x00f, 0x9, 50}};
 	private static int c = 0;
 
 	public static void addPortal(PortalVisualizer p) {
@@ -24,11 +25,16 @@ public class ClientInitializer implements ClientModInitializer {
 		p.portalMesh.setColor(colors[c][0], colors[c][1], colors[c][2], colors[c][3]);
 		c = (c+1)%3;
 		portals.add(p);
+		latestPortal = p;
 	}
 
-	private static void renderPolyhedrons(WorldRenderContext context) {
-		PortalVisualizer[] p = portals.toArray(PortalVisualizer[]::new);
-		if(p.length > 0) p[0].render(context);
+	public static void clear() {
+		portals.clear();
+		latestPortal = null;
+	}
+
+	private static void render(WorldRenderContext context) {
+		if(latestPortal != null) latestPortal.render(context);
 //		for (PortalVisualizer portal : portals) {
 //			if(portal == null) continue; // maybe not needed
 //			portal.render(context);
@@ -37,6 +43,6 @@ public class ClientInitializer implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		WorldRenderEvents.LAST.register(ClientInitializer::renderPolyhedrons);
+		WorldRenderEvents.LAST.register(ClientInitializer::render);
 	}
 }

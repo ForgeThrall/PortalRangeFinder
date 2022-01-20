@@ -65,7 +65,7 @@ public class Mesh {
 		tessellator.draw();
 
 		RenderSystem.setShader(GameRenderer::getRenderTypeLinesShader);
-		RenderSystem.lineWidth(3F);
+		RenderSystem.lineWidth(.5F);
 		bufferBuilder.begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
 		for(Vec3d[] line : lines) {
 			Vec3d v0 = cam.relativize(line[0]);

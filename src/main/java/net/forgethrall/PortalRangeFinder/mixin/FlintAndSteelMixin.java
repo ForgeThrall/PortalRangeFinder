@@ -27,7 +27,7 @@ public class FlintAndSteelMixin {
 			cir.setReturnValue(ActionResult.SUCCESS);
 		}
 		if(world.isClient() && blockState.getBlock() instanceof TintedGlassBlock) {
-			ClientInitializer.portals.clear();
+			ClientInitializer.clear();
 			cir.setReturnValue(ActionResult.SUCCESS);
 		}
 	}

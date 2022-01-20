@@ -26,7 +26,7 @@ public class PortalVisualizer {
 		BlockLocating.Rectangle portalRect = BlockLocating.getLargestRectangle(portalBlockPos, blockState.get(Properties.HORIZONTAL_AXIS), 21, Direction.Axis.Y, 21, pos -> world.getBlockState(pos) == blockState);
 
 		this.portalOrigin = portalRect.lowerLeft;
-		int xWidth, yWidth;
+		final int xWidth, yWidth;
 		if(blockState.get(Properties.HORIZONTAL_AXIS) == Direction.Axis.X) {
 			xWidth = portalRect.width;
 			yWidth = 1;
@@ -37,16 +37,6 @@ public class PortalVisualizer {
 		this.portalSize = new Vec3i(xWidth , portalRect.height, yWidth);
 
 		this.portalDimension = world.getRegistryKey();
-//		int rangeRadius, rangeBottom, rangeTop;
-//		if(portalDimension == World.OVERWORLD){
-//			rangeRadius = 16;
-//			rangeBottom = 0;
-//			rangeTop = 256;
-//		} else {
-//			rangeRadius = 128;
-//			rangeBottom = -64;
-//			rangeTop = 320;
-//		}
 
 		if(portalDimension == World.OVERWORLD) {
 			voxels = new boolean[256+portalSize.getX()][256][256+portalSize.getY()];
@@ -67,10 +57,9 @@ public class PortalVisualizer {
 	}
 
 	public void render(WorldRenderContext context) {
-		if(context.world().getRegistryKey() == World.END) return;
 		if(context.world().getRegistryKey() == portalDimension) {
 			portalMesh.render(context);
-		} else {
+		} else if(context.world().getRegistryKey() == World.NETHER || context.world().getRegistryKey() == World.OVERWORLD) {
 			rangeMesh.render(context);
 		}
 	}
@@ -146,13 +135,12 @@ public class PortalVisualizer {
 
 			for(xyz[d] = -1; xyz[d] < dims[d]; ) {
 				// Compute mask
-				for(xyz[u] = 0; xyz[u] < dims[u]; xyz[u]++) {
-					for(xyz[v] = 0; xyz[v] < dims[v]; xyz[v]++) {
-						// starts before the first plane, comparing ahead
-						mask[xyz[u]][xyz[v]] =
-								(xyz[d] >= 0 && voxels[xyz[0]][xyz[1]][xyz[2]]) !=
-								(xyz[d]+1 < dims[d] && voxels[xyz[0] + step[0]][xyz[1] + step[1]][xyz[2] + step[2]]);
-					}
+				for(xyz[u] = 0; xyz[u] < dims[u]; xyz[u]++)
+				for(xyz[v] = 0; xyz[v] < dims[v]; xyz[v]++) {
+					// starts before the first plane, comparing ahead
+					mask[xyz[u]][xyz[v]] =
+							(xyz[d] >= 0 && voxels[xyz[0]][xyz[1]][xyz[2]]) !=
+							(xyz[d]+1 < dims[d] && voxels[xyz[0] + step[0]][xyz[1] + step[1]][xyz[2] + step[2]]);
 				}
 				if(d == 0 && xyz[d] == -1) {
 					ClientInitializer.LOGGER.info(Arrays.deepToString(voxels[0]));
@@ -161,63 +149,62 @@ public class PortalVisualizer {
 				xyz[d]++;
 
 				// generate outline from mask
-				for(int j = -1; j < dims[v]; j++) {
-					for(int i = 0; i < dims[u]; i++) {
-						if((j >= 0 && mask[i][j]) != (j+1 < dims[v] && mask[i][j+1])) {
-							xyz[u] = i;
-							xyz[v] = j+1;
-							int w = 1;
-							while(i+w < dims[u] && ((j >= 0 && mask[i+w][j]) != (j+1 < dims[v] && mask[i+w][j+1]))) w++;
-							int[] du = new int[]{0, 0, 0};
-							du[u] = w;
-							lines.add(new Vec3d[]{
-									new Vec3d(x0+(xyz[0]      )*scale, y0+xyz[1],       z0+(xyz[2]      )*scale),
-									new Vec3d(x0+(xyz[0]+du[0])*scale, y0+xyz[1]+du[1], z0+(xyz[2]+du[2])*scale)
-							});
-							i += w-1;
-						}
-					}
+				for(int j = -1; j < dims[v]; j++)
+				for(int i = 0; i < dims[u]; i++) {
+					if((j >= 0 && mask[i][j]) == (j+1 < dims[v] && mask[i][j+1])) continue;
+					xyz[u] = i;
+					xyz[v] = j+1;
+
+					int w = 1;
+					while(i+w < dims[u] && ((j >= 0 && mask[i+w][j]) != (j+1 < dims[v] && mask[i+w][j+1]))) w++;
+					int[] du = new int[]{0, 0, 0};
+					du[u] = w;
+
+					lines.add(new Vec3d[]{
+							new Vec3d(x0+(xyz[0]      )*scale, y0+xyz[1],       z0+(xyz[2]      )*scale),
+							new Vec3d(x0+(xyz[0]+du[0])*scale, y0+xyz[1]+du[1], z0+(xyz[2]+du[2])*scale)
+					});
+					i += w-1;
 				}
 
 				// generate mesh from mask (destructive of the mask)
-				for(int j = 0; j < dims[v]; j++) {
-					for(int i = 0; i < dims[u]; i++) {
-						if(mask[i][j]) {
-							int w = 1;
-							while(i+w < dims[u] && mask[i+w][j]) w++;
+				for(int j = 0; j < dims[v]; j++)
+				for(int i = 0; i < dims[u]; i++) {
+					if(!mask[i][j]) continue;
 
-							int h;
-							calc_height:
-							for(h = 1; j+h < dims[v]; h++){
-								for(int k = 0; k < w; k++) {
-									if(!mask[i+k][j+h]) break calc_height;
-								}
-							}
+					xyz[u] = i;
+					xyz[v] = j;
 
-							xyz[u] = i;
-							xyz[v] = j;
+					int w = 1;
+					while(i+w < dims[u] && mask[i+w][j]) w++;
 
-							int[] du = new int[]{0, 0, 0};
-							int[] dv = new int[]{0, 0, 0};
-							du[u] = w;
-							dv[v] = h;
-
-							quads.add(new Vec3d[]{
-									new Vec3d(x0+(xyz[0]            )*scale, y0+xyz[1],             z0+(xyz[2]            )*scale),
-									new Vec3d(x0+(xyz[0]+du[0]      )*scale, y0+xyz[1]+du[1],       z0+(xyz[2]+du[2]      )*scale),
-									new Vec3d(x0+(xyz[0]+du[0]+dv[0])*scale, y0+xyz[1]+du[1]+dv[1], z0+(xyz[2]+du[2]+dv[2])*scale),
-									new Vec3d(x0+(xyz[0]      +dv[0])*scale, y0+xyz[1]      +dv[1], z0+(xyz[2]      +dv[2])*scale)
-							});
-
-							// clear the portion of the mask that's been covered
-							for(int l = 0; l < w; l++) {
-								for(int k = 0; k < h; k++) {
-									mask[i+l][j+k] = false;
-								}
-							}
-							i += w-1;
+					int h;
+					calc_height:
+					for(h = 1; j+h < dims[v]; h++){
+						for(int k = 0; k < w; k++) {
+							if(!mask[i+k][j+h]) break calc_height;
 						}
 					}
+
+					int[] du = new int[]{0, 0, 0};
+					int[] dv = new int[]{0, 0, 0};
+					du[u] = w;
+					dv[v] = h;
+
+					quads.add(new Vec3d[]{
+							new Vec3d(x0+(xyz[0]            )*scale, y0+xyz[1],             z0+(xyz[2]            )*scale),
+							new Vec3d(x0+(xyz[0]+du[0]      )*scale, y0+xyz[1]+du[1],       z0+(xyz[2]+du[2]      )*scale),
+							new Vec3d(x0+(xyz[0]+du[0]+dv[0])*scale, y0+xyz[1]+du[1]+dv[1], z0+(xyz[2]+du[2]+dv[2])*scale),
+							new Vec3d(x0+(xyz[0]      +dv[0])*scale, y0+xyz[1]      +dv[1], z0+(xyz[2]      +dv[2])*scale)
+					});
+
+					// clear the portion of the mask that's been covered
+					for(int l = 0; l < w; l++) {
+						for(int k = 0; k < h; k++) {
+							mask[i+l][j+k] = false;
+						}
+					}
+					i += w-1;
 				}
 			}
 		}
@@ -228,7 +215,6 @@ public class PortalVisualizer {
 	public void interfereWith(PortalVisualizer other) {
 		if(this.portalDimension != other.portalDimension) return;
 
-		int dx = this.portalOrigin.getX() - other.portalOrigin.getX();
 		// todo: de-duplicate this from generateRangeMesh?
 		final int y0, thisX0, thisZ0, otherX0, otherZ0;
 		if(this.portalDimension == World.OVERWORLD) {
@@ -248,7 +234,7 @@ public class PortalVisualizer {
 		Vec3i thisOrigin = new Vec3i(this.portalOrigin.getX(), this.portalOrigin.getY(), this.portalOrigin.getZ());
 		Vec3i otherOrigin = new Vec3i(other.portalOrigin.getX(), other.portalOrigin.getY(), other.portalOrigin.getZ());
 
-		int startX, startY, thisXOff, thisZOff, otherXOff, otherZOff;
+		int thisXOff, thisZOff, otherXOff, otherZOff;
 		if(thisX0 > otherX0) {
 			thisXOff = 0;
 			otherXOff = thisX0 - otherX0;
@@ -264,17 +250,15 @@ public class PortalVisualizer {
 			otherZOff = 0;
 		}
 
-		for(int x = 0; x + thisXOff < this.voxels.length && x + otherXOff < other.voxels.length; x++) {
-			for(int y = 0; y < this.voxels[0].length && y < other.voxels[0].length; y++) {
-				for(int z = 0; z + thisZOff < this.voxels[0][0].length && z + otherZOff < other.voxels[0][0].length; z++) {
-					if(!other.voxels[x][y][z]) continue;
-					Vec3i pos = new Vec3i(x+thisXOff+otherXOff, y+y0, z+thisZOff+otherZOff);
-					if(pos.getSquaredDistance(thisOrigin) > pos.getSquaredDistance(otherOrigin)) {
-						this.voxels[x+thisXOff][y][z+thisZOff] = false;
-					} else {
-						other.voxels[x+otherXOff][y][z+otherZOff] = false;
-					}
-				}
+		for(int x = 0; x + thisXOff < this.voxels.length && x + otherXOff < other.voxels.length; x++)
+		for(int y = 0; y < this.voxels[0].length && y < other.voxels[0].length; y++)
+		for(int z = 0; z + thisZOff < this.voxels[0][0].length && z + otherZOff < other.voxels[0][0].length; z++) {
+			if(!other.voxels[x][y][z]) continue;
+			Vec3i pos = new Vec3i(x+thisXOff+otherXOff, y+y0, z+thisZOff+otherZOff);
+			if(pos.getSquaredDistance(thisOrigin) > pos.getSquaredDistance(otherOrigin)) {
+				this.voxels[x+thisXOff][y][z+thisZOff] = false;
+			} else {
+				other.voxels[x+otherXOff][y][z+otherZOff] = false;
 			}
 		}
 
