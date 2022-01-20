@@ -160,7 +160,26 @@ public class PortalVisualizer {
 				}
 				xyz[d]++;
 
-				// generate mesh from mask
+				// generate outline from mask
+				for(int j = -1; j < dims[v]; j++) {
+					for(int i = 0; i < dims[u]; i++) {
+						if((j >= 0 && mask[i][j]) != (j+1 < dims[v] && mask[i][j+1])) {
+							xyz[u] = i;
+							xyz[v] = j+1;
+							int w = 1;
+							while(i+w < dims[u] && ((j >= 0 && mask[i+w][j]) != (j+1 < dims[v] && mask[i+w][j+1]))) w++;
+							int[] du = new int[]{0, 0, 0};
+							du[u] = w;
+							lines.add(new Vec3d[]{
+									new Vec3d(x0+(xyz[0]      )*scale, y0+xyz[1],       z0+(xyz[2]      )*scale),
+									new Vec3d(x0+(xyz[0]+du[0])*scale, y0+xyz[1]+du[1], z0+(xyz[2]+du[2])*scale)
+							});
+							i += w-1;
+						}
+					}
+				}
+
+				// generate mesh from mask (destructive of the mask)
 				for(int j = 0; j < dims[v]; j++) {
 					for(int i = 0; i < dims[u]; i++) {
 						if(mask[i][j]) {
