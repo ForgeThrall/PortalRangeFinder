@@ -103,7 +103,7 @@ public class PortalVisualizer {
 		this.portalMesh.setMesh(quads, lines);
 	}
 
-	private void generateRangeMesh() {
+	public void generateRangeMesh() {
 		HashSet<Vec3d[]> quads = new HashSet<>();
 		HashSet<Vec3d[]> lines = new HashSet<>();
 
@@ -216,7 +216,7 @@ public class PortalVisualizer {
 		if(this.portalDimension != other.portalDimension) return;
 
 		// todo: de-duplicate this from generateRangeMesh?
-		final int y0, thisX0, thisZ0, otherX0, otherZ0;
+		final int x0, y0, z0, thisX0, thisZ0, otherX0, otherZ0;
 		if(this.portalDimension == World.OVERWORLD) {
 			y0 = 0;
 			thisX0 = this.portalOrigin.getX() - 128;
@@ -230,31 +230,23 @@ public class PortalVisualizer {
 			otherX0 = other.portalOrigin.getX()-16;
 			otherZ0 = other.portalOrigin.getZ()-16;
 		}
+		x0 = Math.max(thisX0, otherX0);
+		z0 = Math.max(thisZ0, otherZ0);
 
 		Vec3i thisOrigin = new Vec3i(this.portalOrigin.getX(), this.portalOrigin.getY(), this.portalOrigin.getZ());
 		Vec3i otherOrigin = new Vec3i(other.portalOrigin.getX(), other.portalOrigin.getY(), other.portalOrigin.getZ());
 
-		int thisXOff, thisZOff, otherXOff, otherZOff;
-		if(thisX0 > otherX0) {
-			thisXOff = 0;
-			otherXOff = thisX0 - otherX0;
-		} else {
-			thisXOff = otherX0 - thisX0;
-			otherXOff = 0;
-		}
-		if(thisZ0 > otherZ0) {
-			thisZOff = 0;
-			otherZOff = thisZ0 - otherZ0;
-		} else {
-			thisZOff = otherZ0 - thisZ0;
-			otherZOff = 0;
-		}
+		int thisXOff  = Math.max(otherX0 - thisX0,  0);
+		int otherXOff = Math.max(thisX0  - otherX0, 0);
+		int thisZOff  = Math.max(otherZ0 - thisZ0,  0);
+		int otherZOff = Math.max(thisZ0  - otherZ0, 0);
 
 		for(int x = 0; x + thisXOff < this.voxels.length && x + otherXOff < other.voxels.length; x++)
 		for(int y = 0; y < this.voxels[0].length && y < other.voxels[0].length; y++)
 		for(int z = 0; z + thisZOff < this.voxels[0][0].length && z + otherZOff < other.voxels[0][0].length; z++) {
-			if(!other.voxels[x][y][z]) continue;
-			Vec3i pos = new Vec3i(x+thisXOff+otherXOff, y+y0, z+thisZOff+otherZOff);
+			if(!other.voxels[x+otherXOff][y][z+otherZOff]) continue;
+			Vec3i pos = new Vec3i(x+x0, y+y0, z+z0);
+			// todo: deal with equidistant points. MC does weird priority order with it
 			if(pos.getSquaredDistance(thisOrigin) > pos.getSquaredDistance(otherOrigin)) {
 				this.voxels[x+thisXOff][y][z+thisZOff] = false;
 			} else {
@@ -262,7 +254,7 @@ public class PortalVisualizer {
 			}
 		}
 
-		this.generateRangeMesh();
+//		this.generateRangeMesh();
 		other.generateRangeMesh();
 	}
 }

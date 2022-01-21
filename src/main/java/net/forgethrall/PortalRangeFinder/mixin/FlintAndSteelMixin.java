@@ -23,6 +23,7 @@ public class FlintAndSteelMixin {
 		BlockPos blockPos = context.getBlockPos();
 		BlockState blockState = world.getBlockState(blockPos);
 		if(world.isClient() && blockState.getBlock() instanceof NetherPortalBlock) {
+			// todo: handle non-overworld/nether usage
 			ClientInitializer.addPortal(new PortalVisualizer(context.getWorld(), blockPos));
 			cir.setReturnValue(ActionResult.SUCCESS);
 		}

@@ -21,6 +21,7 @@ public class ClientInitializer implements ClientModInitializer {
 		for(PortalVisualizer p2 : portals) {
 			p.interfereWith(p2);
 		}
+		p.generateRangeMesh();
 		p.rangeMesh.setColor(colors[c][0], colors[c][1], colors[c][2], colors[c][3]);
 		p.portalMesh.setColor(colors[c][0], colors[c][1], colors[c][2], colors[c][3]);
 		c = (c+1)%3;
@@ -34,11 +35,11 @@ public class ClientInitializer implements ClientModInitializer {
 	}
 
 	private static void render(WorldRenderContext context) {
-		if(latestPortal != null) latestPortal.render(context);
-//		for (PortalVisualizer portal : portals) {
-//			if(portal == null) continue; // maybe not needed
-//			portal.render(context);
-//		}
+//		if(latestPortal != null) latestPortal.render(context);
+		for (PortalVisualizer portal : portals) {
+			if(portal == null) continue; // maybe not needed
+			portal.render(context);
+		}
 	}
 
 	@Override
